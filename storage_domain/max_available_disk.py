@@ -1,32 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import ovirtsdk4 as sdk
-import re
 
 # set variables
-fqdn = 'host.example.com'
-password = 'password'
-dc_name = 'example_dc'
+engine_url = 'https://host.example.com/ovirt-engine/api'
+engine_user = 'admin@internal'
+engine_password = 'password'
+engine_cafile = 'CA_FILE_PATH'
+cluster = 'cluster_name'
 
 # Create the connection to the server:
 connection = sdk.Connection(
-  url=f'https://{fqdn}/ovirt-engine/api',
-  username='admin@internal',
-  password=password,
-  ca_file="CA_FILE_PATH"
+  url=engine_url,
+  username=engine_user,
+  password=engine_password,
+  ca_file=engine_cafile
 )
 
 def get_storage_domain():
   storage_domain = None
 
-  # Create the Data Centers Service
-  dcs_service = connection.system_service().data_centers_service()
+  # Create the Clusters Service
+  clusters_service = connection.system_service().clusters_service()
 
-  # Get the list of Storage Domains for the service that Match the Data Centre Name
-  dc = dcs_service.list(search=f'name={dc_name}', max=1, follow='storage_domains')
-  dc = dc[0]
+  # Get the list of Storage Domains for the service that Match the Cluser Name
+  clstr = clusters_service.list(search=f'name={cluster}', max=1, follow='data_center.storage_domains')
+  clstr = clstr[0]
 
-  for sd in dc.storage_domains:
+  for sd in clstr.data_center.storage_domains:
     if storage_domain is None:
       storage_domain = sd
       continue
