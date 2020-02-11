@@ -5,33 +5,28 @@ import re
 
 # set variables
 fqdn = 'host.example.com'
-password = 'passwod'
+password = 'password'
+dc_name = 'example_dc'
 
 # Create the connection to the server:
 connection = sdk.Connection(
   url=f'https://{fqdn}/ovirt-engine/api',
   username='admin@internal',
   password=password,
-  insecure=True,
-  debug=True,
+  ca_file="CA_FILE_PATH"
 )
 
-def get_storage_domain(dc):
-  dc = dc.upper()
+def get_storage_domain():
   storage_domain = None
 
-  # Create the storage domain service and get a list of storage domains
-  sds_service = connection.system_service().storage_domains_service()
-  storage_domains = sds_service.list()
+  # Create the Data Centers Service
+  dcs_service = connection.system_service().data_centers_service()
 
-  # Iterate over the storage domains and get the used and available
-  # disk space for each
-  for sd in storage_domains:
-    match = re.match("^\w+_(" + dc + ")_\w+$", sd.name)
+  # Get the list of Storage Domains for the service that Match the Data Centre Name
+  dc = dcs_service.list(search=f'name={dc_name}', max=1, follow='storage_domains')
+  dc = dc[0]
 
-    if not match:
-      continue
-
+  for sd in dc.storage_domains:
     if storage_domain is None:
       storage_domain = sd
       continue
@@ -44,7 +39,7 @@ def get_storage_domain(dc):
 
   return storage_domain.name
 
-# Get the storage domains that match example_dc and return the one with
+# Get the storage domains return the one with
 # the most available disk space
-sd = get_storage_domain('example_dc')
+sd = get_storage_domain()
 print(sd)
